@@ -1,0 +1,10 @@
+.ant-form {
+  text-align: center;
+  margin: 30px auto;
+}
+.ql-container {
+  height: 450px !important ;
+}
+.ql-snow .ql-editor img {
+  max-width: 80% !important;
+}

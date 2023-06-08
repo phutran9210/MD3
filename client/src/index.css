@@ -1,0 +1,16 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+.ant-menu-overflow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ant-space-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
