@@ -1,8 +1,10 @@
 import { Avatar, List, Space, Button } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
+import parse from "html-react-parser";
 import CommentModal from "./modal/CommentModal";
 import { useState } from "react";
-
+import { useDispatch } from "react-redux";
+import { addComment } from "../../redux/actions/modal";
 const optionStyle = {
   display: "flex",
   justifyContent: "space-between",
@@ -10,10 +12,13 @@ const optionStyle = {
   width: "100%",
 };
 const CommentList = ({ answers }) => {
+  const dispatch = useDispatch();
   const [isCommentModalVisible, setIsCommentModalVisible] = useState(false);
+  const [selectedAnswerId, setSelectedAnswerId] = useState(null);
   const [isReportModalVisible, setIsReportModalVisible] = useState(false);
 
-  const showCommentModal = () => {
+  const showCommentModal = (answerId) => {
+    setSelectedAnswerId(answerId);
     setIsCommentModalVisible(true);
   };
 
@@ -29,6 +34,16 @@ const CommentList = ({ answers }) => {
   const handleCancel = () => {
     setIsCommentModalVisible(false);
     setIsReportModalVisible(false);
+  };
+  const handleSubmitComment = (commentText) => {
+    console.log("đây là cmtlisst", commentText);
+    console.log("Selected answer_id:", selectedAnswerId);
+    dispatch(
+      addComment({
+        commentText: commentText,
+        answer_id: selectedAnswerId,
+      })
+    );
   };
   return (
     <List
@@ -46,9 +61,12 @@ const CommentList = ({ answers }) => {
               }
               title={
                 <div style={optionStyle}>
-                  <a href="#">{answer.title}</a>
+                  <a href="#">{answer.username}</a>
                   <Space>
-                    <Button type="text" onClick={showCommentModal}>
+                    <Button
+                      type="text"
+                      onClick={() => showCommentModal(answer.answer_id)}
+                    >
                       Reply
                     </Button>
                     <Button
@@ -59,7 +77,7 @@ const CommentList = ({ answers }) => {
                   </Space>
                 </div>
               }
-              description={answer.content}
+              description={parse(answer.body)}
             />
           </List.Item>
           {/* Like and Reply Buttons */}
@@ -70,6 +88,7 @@ const CommentList = ({ answers }) => {
             isReportModalVisible={isReportModalVisible}
             handleOk={handleOk}
             handleCancel={handleCancel}
+            onSubmitComment={handleSubmitComment}
           />
 
           {/* Render Comments */}
@@ -77,18 +96,27 @@ const CommentList = ({ answers }) => {
             itemLayout="horizontal"
             dataSource={answer.comments}
             renderItem={(comment, commentIndex) => (
-              <List.Item style={{ marginLeft: "30px" }}>
+              <List.Item
+                style={{
+                  marginLeft: "30px",
+                  display:
+                    !comment?.username || !comment?.body ? "none" : "block",
+                }}
+              >
                 <List.Item.Meta
                   avatar={
                     <Avatar
                       src={`https://xsgames.co/randomusers/avatar.php?g=pixel&key=${commentIndex}`}
                     />
                   }
-                  title={<a href="#">{comment.author}</a>}
-                  description={comment.content}
+                  title={<a href="#">{comment.username}</a>}
+                  description={comment.body}
                 />
               </List.Item>
             )}
+            locale={{
+              emptyText: <span></span>,
+            }}
           />
         </div>
       )}

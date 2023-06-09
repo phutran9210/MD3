@@ -1,0 +1,13 @@
+.quill {
+  width: 60%;
+  margin: 0 auto;
+}
+.ql-container {
+  height: 300px !important;
+}
+.button-group {
+  text-align: right;
+  margin-top: 10px;
+
+  width: 80%;
+}

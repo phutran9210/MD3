@@ -308,6 +308,10 @@ router.post("/:id", async function (req, res) {
   }
 });
 
+router.get("/:question_id", async function (req, res) {
+  console.log(req.params);
+});
+
 router.post("/refresh-token", (req, res) => {
   const token = req.cookies.token;
 

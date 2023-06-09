@@ -1,8 +1,8 @@
-import { call, put, takeLatest, select } from "redux-saga/effects";
+import { call, put, takeLatest, select, takeEvery } from "redux-saga/effects";
 import * as actions from "../actions/users";
 import * as api from "../../api/UsersCallApi";
 import * as login from "../actions/loginUser";
-
+import { ADD_COMMENT, addCommentSuccess } from "../actions/modal";
 import * as getPostData from "../actions/posts";
 import { message } from "antd";
 function* getUserSaga(action) {
@@ -80,6 +80,55 @@ function* get1PostSaga(action) {
   }
 }
 
+function* sendAnswerSaga(action) {
+  console.log("saga", action);
+  try {
+    const { question_id, newAnswer } = action.payload;
+
+    const response = yield call(api.fetchSendAnswer, question_id, newAnswer);
+    if (response.status === 201) {
+      message.success("Thành công");
+    }
+    yield put(getPostData.sendAnswer.getSendAnswerSuccess(response.data));
+  } catch (error) {
+    yield put(getPostData.sendAnswer.getSendAnswerFailure(error));
+  }
+}
+
+function* handleAddComment(action) {
+  const { commentText, answer_id } = action.payload;
+  console.log("saga", action.payload);
+
+  yield put(
+    addCommentSuccess({ commentText: commentText, answer_id: answer_id })
+  );
+}
+
+function* sendCommentSaga(action) {
+  try {
+    console.log("saga", action.payload.comment);
+    const { question_id, answer_id, comment } = action.payload;
+    const response = yield call(api.fetchSendComment, question_id, answer_id, {
+      comment,
+    });
+  } catch (error) {
+    yield put(getPostData.sendComment.getSendCommentFailure(error));
+  }
+}
+
+function* getAnswerSaga(action) {
+  try {
+    const question_id = action.payload;
+
+    const response = yield call(api.fetchGetAnswer, question_id);
+    yield put(
+      getPostData.getBodyQuestion.getBodyQuestionSuccess(response.data)
+    );
+  } catch (error) {
+    yield put(getPostData.sendAnswer.getBodyQuestionFailure(error));
+  }
+}
+
 function* mySaga() {
   yield takeLatest(actions.getUsers.getUsersRequest, getUserSaga);
   yield takeLatest(actions.createUser.createUserRequest, createUserSaga);
@@ -90,6 +139,20 @@ function* mySaga() {
   yield takeLatest(getPostData.getPosts.getPostsRequest, getPostDataSaga);
 
   yield takeLatest(getPostData.get1Post.get1PostRequest, get1PostSaga);
+
+  yield takeLatest(getPostData.sendAnswer.getSendAnswerRequest, sendAnswerSaga);
+
+  yield takeLatest(
+    getPostData.sendComment.getSendCommentRequest,
+    sendCommentSaga
+  );
+
+  yield takeLatest(
+    getPostData.getBodyQuestion.getBodyQuestionRequest,
+    getAnswerSaga
+  );
+
+  yield takeEvery(ADD_COMMENT, handleAddComment);
 }
 
 export default mySaga;

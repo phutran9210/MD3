@@ -7,6 +7,7 @@ import {
   Button,
   Space,
   Avatar,
+  message,
 } from "antd";
 import {
   EditOutlined,
@@ -17,65 +18,89 @@ import {
 
 import * as actions from "../../redux/actions/posts";
 
-import { onePost } from "../../redux/selector/selector";
+import {
+  commentUser,
+  onePost,
+  formattedData,
+} from "../../redux/selector/selector";
+
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 
 import CommentList from "../answers/CommentList";
-import TextEditor from "./ckeditor/Ckeditor";
-
+import AnswerInput from "./ckeditor/AnswerInput";
 const { Title, Paragraph, Text } = Typography;
 
 const Question = () => {
+  const [content, setContent] = useState("");
   const [post, setPost] = useState(null);
   const [isPostLoaded, setIsPostLoaded] = useState(false);
   const dispatch = useDispatch();
   const postSaga = useSelector(onePost);
+  const comments = useSelector(commentUser);
+  const data = useSelector(formattedData);
 
   const { question_id } = useParams();
+
   useEffect(() => {
     dispatch(actions.get1Post.get1PostRequest(question_id));
-  }, [dispatch, question_id]);
+    dispatch(actions.getBodyQuestion.getBodyQuestionRequest(question_id));
 
+    if (comments && comments.answerId && comments.latestComment) {
+      const { answerId, latestComment } = comments;
+      const userID = JSON.parse(localStorage.getItem("loggedUser"));
+      if (userID) {
+        const cmtPayload = {
+          latestComment: latestComment,
+          userID: userID,
+        };
+        dispatch(
+          actions.sendComment.getSendCommentRequest(
+            question_id,
+            answerId,
+            cmtPayload
+          )
+        );
+      } else {
+        message.warning("Vui lòng đăng nhập lại để thực hiện hành động");
+      }
+    }
+  }, [comments, dispatch, question_id]);
+  console.log("dataaaaa", data);
   useEffect(() => {
     if (postSaga) {
       setPost(postSaga);
       setIsPostLoaded(true);
     }
   }, [postSaga]);
-  console.log(post);
 
   if (!isPostLoaded) {
     return <div>Loading...</div>;
   }
 
-  post.answers = [
-    {
-      title: "Answer 1",
-      content: "This is the content of the first answer.",
-      comments: [
-        {
-          author: "UserA",
-          content: "This is a comment on the first answer by UserA.",
-        },
-        {
-          author: "UserB",
-          content: "This is another comment on the first answer by UserB.",
-        },
-      ],
-    },
-    {
-      title: "Answer 2",
-      content: "This is the content of the second answer.",
-      comments: [
-        {
-          author: "UserC",
-          content: "This is a comment on the second answer by UserC.",
-        },
-      ],
-    },
-  ];
+  post.answers = data;
+  const handleContentChange = (newContent) => {
+    setContent(newContent);
+  };
 
+  const handleCancel = () => {
+    setContent("");
+  };
+
+  const handleSubmit = () => {
+    const userID = JSON.parse(localStorage.getItem("loggedUser"));
+    if (userID) {
+      const newAnswer = {
+        userID: userID,
+        content: content,
+        question_id: question_id,
+      };
+      setContent("");
+      dispatch(actions.sendAnswer.getSendAnswerRequest(question_id, newAnswer));
+    } else {
+      message.warning("Vui lòng đăng nhập lại để thực hiện hành động");
+    }
+  };
   return (
     <>
       <div>
@@ -116,7 +141,12 @@ const Question = () => {
         <Avatar size="large" icon={<AntDesignOutlined />} />
         <Divider />
         <CommentList answers={post?.answers} />
-        <TextEditor />
+        <AnswerInput
+          content={content}
+          onContentChange={handleContentChange}
+          onCancel={handleCancel}
+          onSubmit={handleSubmit}
+        />
       </div>
     </>
   );

@@ -1,21 +1,38 @@
-import React from "react";
-import { Modal, Button } from "antd";
+import React, { useState } from "react";
+import { Modal, Button, Input } from "antd";
+
+const { TextArea } = Input;
 
 const CommentModal = ({
   isCommentModalVisible,
   isReportModalVisible,
   handleOk,
   handleCancel,
+  onSubmitComment,
 }) => {
+  const [comment, setComment] = useState("");
+
+  const handleSubmit = () => {
+    // Pass comment text to the parent component
+    onSubmitComment(comment);
+    setComment("");
+    handleOk();
+  };
+
   return (
     <>
       <Modal
-        title="Add Comment"
+        title="Bạn đang trả lời ... "
         open={isCommentModalVisible}
-        onOk={handleOk}
+        onOk={handleSubmit}
         onCancel={handleCancel}
       >
-        {/* Add form for comment here */}
+        <TextArea
+          rows={4}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="Write your comment here..."
+        />
       </Modal>
 
       <Modal
